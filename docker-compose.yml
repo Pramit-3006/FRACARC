@@ -1,0 +1,54 @@
+version: '3.9'
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - '3000:3000'
+    environment:
+      - NEXT_PUBLIC_API_BASE=http://localhost:3001/api
+    depends_on:
+      - gateway
+
+  gateway:
+    build: ./backend/gateway
+    ports:
+      - '3001:3001'
+    environment:
+      - AI_SERVICE_URL=http://ai-service:8000
+      - JWT_SECRET=fracarc-secret
+    depends_on:
+      - ai-service
+      - redis
+
+  ai-service:
+    build: ./backend/ai-service
+    ports:
+      - '8000:8000'
+    depends_on:
+      - postgres
+      - mongodb
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: fracarc
+      POSTGRES_PASSWORD: fracarc_pass
+      POSTGRES_DB: fracarcdb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:7.0
+    volumes:
+      - mongo-data:/data/db
+
+  redis:
+    image: redis:7.2
+    command: ["redis-server", "--save", "" ]
+    volumes:
+      - redis-data:/data
+
+volumes:
+  postgres-data:
+  mongo-data:
+  redis-data:
